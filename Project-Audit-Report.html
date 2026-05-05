@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Audit Report</title>
+    <style>
+      :root {
+        --bg: #171717;
+        --panel: #1f1f1f;
+        --panel-2: #252525;
+        --line: #333333;
+        --text: #f3f4f6;
+        --muted: #a3a3a3;
+        --accent: #8fbf97;
+        --accent-2: #d7c088;
+        --danger: #fb7185;
+        --warn: #f59e0b;
+        --good: #34d399;
+        --shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+        --radius-xl: 22px;
+        --radius-lg: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(circle at top, rgba(143, 191, 151, 0.08), transparent 30%),
+          linear-gradient(180deg, #151515 0%, #101010 100%);
+        color: var(--text);
+        font-family: "PingFang SC", "Microsoft YaHei", "Inter", system-ui, sans-serif;
+      }
+
+      body {
+        padding: 32px 20px 80px;
+      }
+
+      .shell {
+        margin: 0 auto;
+        max-width: 1180px;
+      }
+
+      .hero {
+        margin-bottom: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border-radius: 26px;
+        padding: 24px 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .note {
+        margin-top: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(143, 191, 151, 0.25);
+        background: rgba(143, 191, 151, 0.08);
+        color: #d9eadc;
+        font-size: 13px;
+      }
+
+      .editor {
+        outline: none;
+      }
+
+      .section {
+        margin-top: 28px;
+      }
+
+      .section-title {
+        margin: 0 0 16px;
+        font-size: 28px;
+        line-height: 1.3;
+      }
+
+      .section-desc {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .subsection {
+        margin-top: 20px;
+      }
+
+      .subsection h3 {
+        margin: 0 0 14px;
+        font-size: 22px;
+      }
+
+      .subsection h4 {
+        margin: 0 0 12px;
+        font-size: 18px;
+        color: #e5e7eb;
+      }
+
+      .card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+        border-radius: var(--radius-xl);
+        padding: 18px 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      th,
+      td {
+        padding: 16px 18px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--line);
+        border-right: 1px solid var(--line);
+        line-height: 1.8;
+      }
+
+      th:last-child,
+      td:last-child {
+        border-right: none;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      th {
+        background: #2b2b2b;
+        color: #f5f5f5;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      td {
+        color: #e5e7eb;
+        font-size: 15px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+        line-height: 1.9;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #f3f4f6;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .chip.code {
+        color: var(--accent-2);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .status-high {
+        color: #fecaca;
+      }
+
+      .status-mid {
+        color: #fde68a;
+      }
+
+      .status-low {
+        color: #bfdbfe;
+      }
+
+      .callout {
+        border-left: 4px solid var(--accent);
+        padding: 14px 16px;
+        border-radius: 0 14px 14px 0;
+        background: rgba(143, 191, 151, 0.08);
+        color: #e7f4ea;
+        line-height: 1.9;
+      }
+
+      .divider {
+        height: 1px;
+        margin: 28px 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+      }
+
+      .footer-note {
+        margin-top: 30px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 900px) {
+        .grid.two,
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+
+        body {
+          padding: 20px 14px 56px;
+        }
+
+        .hero,
+        .card {
+          padding: 18px 16px;
+        }
+
+        h1 {
+          font-size: 28px;
+        }
+
+        .section-title {
+          font-size: 24px;
+        }
+
+        th,
+        td {
+          padding: 14px 12px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <p class="eyebrow">Project Audit Report</p>
+        <h1>考研学习工具优化审查报告</h1>
+        <p class="subtitle">
+          这是一份面向当前项目的结构化优化文档，重点不是继续堆功能，而是先把现有功能收成一个统一、稳定、可维护的产品外壳。
+        </p>
+        <div class="note">可编辑模式已开启：下方正文区域支持直接修改</div>
+      </header>
+
+      <main class="editor" contenteditable="true" spellcheck="false">
+        <section class="section">
+          <h2 class="section-title">一、项目当前总体判断</h2>
+          <div class="card">
+            <p class="section-desc">
+              当前项目已经具备首页、任务、错题、知识点、搜索、统计、数据管理等核心页面雏形，也已经开始接入 Supabase。
+              但从代码结构、页面一致性和长期维护角度看，项目已经出现明显的“继续堆功能会越来越乱”的趋势。
+            </p>
+            <div class="callout">
+              当前最核心的问题不是“功能太少”，而是数据源没有统一、页面骨架没有统一、视觉 token 没有收口、page client 容器过重。
+            </div>
+          </div>
+
+          <div class="subsection">
+            <h3>1.1 总览评级</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>维度</th>
+                  <th>当前状态</th>
+                  <th>评级</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>产品方向</td>
+                  <td>明确</td>
+                  <td class="status-low">好</td>
+                  <td>个人考研学习工具定位清晰，没有跑偏。</td>
+                </tr>
+                <tr>
+                  <td>MVP 范围</td>
+                  <td>基本完整</td>
+                  <td class="status-low">好</td>
+                  <td>任务、记录、搜索、统计、导入导出均已覆盖。</td>
+                </tr>
+                <tr>
+                  <td>页面完成度</td>
+                  <td>中等</td>
+                  <td class="status-mid">中</td>
+                  <td>页面可访问，但结构和一致性不足。</td>
+                </tr>
+                <tr>
+                  <td>视觉统一性</td>
+                  <td>偏弱</td>
+                  <td class="status-high">差</td>
+                  <td>首页、模块页、统计页风格割裂。</td>
+                </tr>
+                <tr>
+                  <td>数据层稳定性</td>
+                  <td>偏弱</td>
+                  <td class="status-high">差</td>
+                  <td>mock、本地缓存、Supabase 三套并存。</td>
+                </tr>
+                <tr>
+                  <td>工程可维护性</td>
+                  <td>开始恶化</td>
+                  <td class="status-high">差</td>
+                  <td>重复逻辑明显，page client 文件过重。</td>
+                </tr>
+                <tr>
+                  <td>正式可上线性</td>
+                  <td>不足</td>
+                  <td class="status-high">差</td>
+                  <td>鉴权、错误处理、附件链路还不稳。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subsection">
+            <h3>1.2 优先级总表</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>类别</th>
+                  <th>严重程度</th>
+                  <th>说明</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Supabase 鉴权与数据边界</td>
+                  <td class="status-high">高</td>
+                  <td>当前接入方式不适合正式使用。</td>
+                  <td><span class="chip">P0</span></td>
+                </tr>
+                <tr>
+                  <td>数据源混乱</td>
+                  <td class="status-high">高</td>
+                  <td>mock、本地、远端同时生效。</td>
+                  <td><span class="chip">P0</span></td>
+                </tr>
+                <tr>
+                  <td>文案乱码与编码问题</td>
+                  <td class="status-high">高</td>
+                  <td>直接影响可用性。</td>
+                  <td><span class="chip">P0</span></td>
+                </tr>
+                <tr>
+                  <td>设计 token 漂移</td>
+                  <td class="status-high">高</td>
+                  <td>视觉系统已经失控。</td>
+                  <td><span class="chip">P0</span></td>
+                </tr>
+                <tr>
+                  <td>错误处理缺失</td>
+                  <td class="status-high">高</td>
+                  <td>存在大量静默失败。</td>
+                  <td><span class="chip">P0</span></td>
+                </tr>
+                <tr>
+                  <td>页面结构不统一</td>
+                  <td class="status-mid">中</td>
+                  <td>首页与各模块页信息架构不稳定。</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>page client 过重</td>
+                  <td class="status-mid">中</td>
+                  <td>数据、状态、布局全部堆在一起。</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>组件复用不足</td>
+                  <td class="status-mid">中</td>
+                  <td>相同模式被重复实现。</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>移动端体验不佳</td>
+                  <td class="status-mid">中</td>
+                  <td>详情和筛选不符合 Mobile First。</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>功能闭环不完整</td>
+                  <td class="status-mid">中</td>
+                  <td>上传、归档、设置等链路不完整。</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>无障碍与细节体验</td>
+                  <td class="status-low">低</td>
+                  <td>可以后补，但不能一直忽略。</td>
+                  <td><span class="chip">P2</span></td>
+                </tr>
+                <tr>
+                  <td>性能优化</td>
+                  <td class="status-low">低</td>
+                  <td>当前不是主矛盾。</td>
+                  <td><span class="chip">P2</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <h2 class="section-title">二、P0 阻塞问题</h2>
+
+          <div class="subsection">
+            <h3>2.1 Supabase 接入方式需要立即收紧</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>问题</th>
+                  <th>当前情况</th>
+                  <th>风险</th>
+                  <th>优化建议</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>API 鉴权缺失</td>
+                  <td>路由层主要依赖环境变量存在与否。</td>
+                  <td>正式部署后存在越权风险。</td>
+                  <td>接入 <span class="chip code">Supabase Auth + user_id + RLS</span>。</td>
+                </tr>
+                <tr>
+                  <td>service role 直接承担业务访问</td>
+                  <td>API 直接透传高权限访问数据库。</td>
+                  <td>业务边界过宽。</td>
+                  <td>改为最小权限服务端访问策略。</td>
+                </tr>
+                <tr>
+                  <td>缺少服务端输入校验</td>
+                  <td>POST/PATCH 数据接近裸写。</td>
+                  <td>容易写入脏数据。</td>
+                  <td>给任务、学习记录、上传接口增加 schema 校验。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subsection">
+            <h3>2.2 数据源混乱必须先统一</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>问题</th>
+                  <th>当前情况</th>
+                  <th>风险</th>
+                  <th>优化建议</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>mock、本地缓存、Supabase 共存</td>
+                  <td>每页都可能读到不同来源。</td>
+                  <td>搜索、统计、导出结果失真。</td>
+                  <td>明确单一事实来源。</td>
+                </tr>
+                <tr>
+                  <td>Supabase 空库不接管页面</td>
+                  <td>远端为空时页面继续显示 mock。</td>
+                  <td>fresh project 仍展示假数据。</td>
+                  <td>远端为空也应视为真实状态。</td>
+                </tr>
+                <tr>
+                  <td>页面各自处理同步</td>
+                  <td>每个页面都自己拉取和写回。</td>
+                  <td>重复逻辑越来越多。</td>
+                  <td>抽共享数据同步 hook。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subsection">
+            <h3>2.3 文案乱码与 token 漂移</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>问题</th>
+                  <th>当前情况</th>
+                  <th>影响</th>
+                  <th>优化建议</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>中文乱码</td>
+                  <td>导航、按钮、标题、说明文案存在乱码。</td>
+                  <td>直接影响可用性。</td>
+                  <td>统一使用 UTF-8 重写高频文案。</td>
+                </tr>
+                <tr>
+                  <td>未定义 class 被频繁使用</td>
+                  <td><span class="chip code">bg-moss-*</span>、<span class="chip code">shadow-float</span>、<span class="chip code">safe-bottom</span></td>
+                  <td>渲染不可控。</td>
+                  <td>补齐设计 token 或替换成现有定义。</td>
+                </tr>
+                <tr>
+                  <td>视觉系统未闭环</td>
+                  <td>只有少量全局样式，其余大量局部硬写。</td>
+                  <td>难以统一改版。</td>
+                  <td>建立真正的颜色、圆角、阴影、间距体系。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <h2 class="section-title">三、页面结构与信息架构问题</h2>
+
+          <div class="grid two">
+            <div class="card">
+              <div class="subsection">
+                <h3>3.1 首页问题</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>问题</th>
+                      <th>当前情况</th>
+                      <th>建议</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>首页结构未完全落地</td>
+                      <td><span class="chip code">DatePanel</span>、<span class="chip code">QuickAccessCard</span> 未完整接入首页主流程。</td>
+                      <td>回到 `日期 / 倒计时 / 今日任务 / 随机知识点 / 快速入口` 五区结构。</td>
+                    </tr>
+                    <tr>
+                      <td>首页职责漂移</td>
+                      <td>路由文件中内联统计和进度内容。</td>
+                      <td>首页仅保留摘要，统计页负责正式复盘。</td>
+                    </tr>
+                    <tr>
+                      <td>首页与统计页口径脱节</td>
+                      <td>首页和统计页都在展示趋势，但口径不同。</td>
+                      <td>统一统计来源。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="subsection">
+                <h3>3.2 任务页问题</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>问题</th>
+                      <th>当前情况</th>
+                      <th>建议</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>手机端不是列表优先</td>
+                      <td>先概览、再筛选、再列表。</td>
+                      <td>手机端应改成任务列表优先。</td>
+                    </tr>
+                    <tr>
+                      <td>详情不适合手机</td>
+                      <td>详情直接堆在列表后面。</td>
+                      <td>改成全屏详情或抽屉详情。</td>
+                    </tr>
+                    <tr>
+                      <td>任务进度展示分散</td>
+                      <td>步骤、状态、进度分别散落在不同组件。</td>
+                      <td>抽统一任务进度组件。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <h3>3.3 结构类页面问题汇总</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>页面</th>
+                  <th>当前问题</th>
+                  <th>优化方向</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>错题页 / 知识点页</td>
+                  <td>结构高度平行，重复实现多。</td>
+                  <td>共享 `List + Detail` 骨架，只保留字段差异。</td>
+                </tr>
+                <tr>
+                  <td>搜索页</td>
+                  <td>手机端筛选过重，结果与详情联动不够稳定。</td>
+                  <td>搜索优先，筛选抽屉化，明确选中态规则。</td>
+                </tr>
+                <tr>
+                  <td>统计页</td>
+                  <td>与首页摘要职责重叠。</td>
+                  <td>首页只保留轻摘要，统计页负责正式复盘。</td>
+                </tr>
+                <tr>
+                  <td>数据管理页</td>
+                  <td>导入、导出、概览、预览都堆在一个容器里。</td>
+                  <td>强化“导出模式 / 导入模式”切分。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <h2 class="section-title">四、响应式与三端体验问题</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>终端</th>
+                <th>当前问题</th>
+                <th>建议目标</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>手机端</td>
+                <td>详情和筛选偏重，底部导航不完整。</td>
+                <td>单列、列表优先、全屏详情、完整底部导航。</td>
+              </tr>
+              <tr>
+                <td>平板端</td>
+                <td>双栏有雏形，但左右区规则不统一。</td>
+                <td>固定左列表右详情，筛选可折叠。</td>
+              </tr>
+              <tr>
+                <td>电脑端</td>
+                <td>顶栏 + 页头 + 侧栏层级偏重，页面气质不统一。</td>
+                <td>统一为 `概览/筛选 + 列表 + 详情` 三段式。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <h2 class="section-title">五、代码结构与复用问题</h2>
+
+          <div class="subsection">
+            <h3>5.1 当前明显重复的逻辑</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>重复项</th>
+                  <th>分布位置</th>
+                  <th>建议</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="chip code">usePersistentCollection + remote fetch</span></td>
+                  <td>任务、错题、知识点、搜索、统计、数据管理</td>
+                  <td>抽共享同步 hook。</td>
+                </tr>
+                <tr>
+                  <td><span class="chip code">reviveTasks</span></td>
+                  <td>多处重复定义</td>
+                  <td>抽到任务模块工具层。</td>
+                </tr>
+                <tr>
+                  <td>列表 + 详情布局模式</td>
+                  <td>任务、错题、知识点、搜索</td>
+                  <td>抽共享布局骨架。</td>
+                </tr>
+                <tr>
+                  <td>筛选字段 UI</td>
+                  <td>多个 filter panel</td>
+                  <td>抽统一 `FilterField` 级别组件。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subsection">
+            <h3>5.2 全局组件层不成熟</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>现状</th>
+                  <th>问题</th>
+                  <th>建议</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>全局组件主要只有 <span class="chip code">SectionCard</span>、<span class="chip code">ProgressBar</span>、<span class="chip code">ProgressRing</span></td>
+                  <td>不足以支撑完整设计系统。</td>
+                  <td>新增 Button、Badge、Modal、EmptyState、FilterField 等。</td>
+                </tr>
+                <tr>
+                  <td>部分组件定义了但未真正使用</td>
+                  <td>增加理解成本。</td>
+                  <td>清理废弃组件，减少噪音。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <h2 class="section-title">六、接下来如何继续优化</h2>
+
+          <div class="subsection">
+            <h3>6.1 分阶段优化路线</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>阶段</th>
+                  <th>目标</th>
+                  <th>核心动作</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Phase 1</td>
+                  <td>止血</td>
+                  <td>修乱码、收 token、统一数据源、建立错误反馈、补最小校验</td>
+                  <td><span class="chip">P0</span></td>
+                </tr>
+                <tr>
+                  <td>Phase 2</td>
+                  <td>收敛页面结构</td>
+                  <td>重构首页信息架构，统一列表-详情骨架，收口导航层级</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>Phase 3</td>
+                  <td>重构数据层与组件层</td>
+                  <td>抽共享 hook、拆 page-client、收敛类型与服务边界</td>
+                  <td><span class="chip">P1</span></td>
+                </tr>
+                <tr>
+                  <td>Phase 4</td>
+                  <td>补完闭环</td>
+                  <td>打通上传、归档、统计口径和导入导出边界</td>
+                  <td><span class="chip">P1-P2</span></td>
+                </tr>
+                <tr>
+                  <td>Phase 5</td>
+                  <td>品质增强</td>
+                  <td>无障碍、完整状态四态、测试、PWA 细节</td>
+                  <td><span class="chip">P2-P3</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subsection">
+            <h3>6.2 推荐执行顺序</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>顺序</th>
+                  <th>任务</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>修复乱码文案</td></tr>
+                <tr><td>2</td><td>修复 Tailwind token 漂移与未定义 class</td></tr>
+                <tr><td>3</td><td>统一数据源策略</td></tr>
+                <tr><td>4</td><td>建立错误反馈与最小表单校验</td></tr>
+                <tr><td>5</td><td>重构首页信息架构</td></tr>
+                <tr><td>6</td><td>统一任务、错题、知识点、搜索四页的列表-详情骨架</td></tr>
+                <tr><td>7</td><td>抽共享 hook 和共享 UI 组件</td></tr>
+                <tr><td>8</td><td>打通上传和归档闭环</td></tr>
+                <tr><td>9</td><td>最后补无障碍、测试、PWA 细节</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section">
+          <h2 class="section-title">七、一句话结论</h2>
+          <div class="card">
+            <div class="callout">
+              当前项目最需要的不是“继续长功能”，而是先把已有功能收成一个统一、稳定、可维护的产品外壳。
+            </div>
+            <h4 style="margin-top:18px;">最优先要做好的五件事</h4>
+            <ul>
+              <li>文案编码</li>
+              <li>设计 token</li>
+              <li>数据源统一</li>
+              <li>页面骨架统一</li>
+              <li>共享 hook / 共享组件收口</li>
+            </ul>
+          </div>
+        </section>
+      </main>
+
+      <p class="footer-note">
+        使用方式：直接在浏览器打开本文件，正文区域可编辑；也可以在 VS Code 中继续修改 HTML 结构和内容。
+      </p>
+    </div>
+  </body>
+</html>
