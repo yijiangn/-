@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAuthenticatedSupabaseRequest, SupabaseAuthError } from "@/lib/supabase/auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/config";
-import { removeStudyRecord, updateKnowledge, updateMistake } from "@/lib/supabase/study-records-repository";
+import { removeStudyRecordService, updateKnowledgeService, updateMistakeService } from "@/lib/supabase/study-records-repository";
 import { validateKnowledgeRecord, validateMistakeRecord } from "@/lib/validation";
 
 interface RouteContext {
@@ -16,7 +15,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   try {
-    const auth = await requireAuthenticatedSupabaseRequest(request);
     const payload = (await request.json()) as {
       recordType: "mistake" | "knowledge";
       record: unknown;
@@ -32,7 +30,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         return NextResponse.json({ message: validation.message }, { status: 400 });
       }
 
-      const updated = await updateKnowledge(auth, validation.data);
+      const updated = await updateKnowledgeService(validation.data);
       return NextResponse.json(updated);
     }
 
@@ -45,31 +43,22 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ message: validation.message }, { status: 400 });
     }
 
-    const updated = await updateMistake(auth, validation.data);
+    const updated = await updateMistakeService(validation.data);
     return NextResponse.json(updated);
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "更新学习记录失败，请稍后再试。" }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteContext) {
+export async function DELETE(_request: Request, { params }: RouteContext) {
   if (!hasSupabaseServerEnv()) {
     return NextResponse.json({ message: "Supabase 未配置。" }, { status: 503 });
   }
 
   try {
-    const auth = await requireAuthenticatedSupabaseRequest(request);
-    await removeStudyRecord(auth, params.id);
+    await removeStudyRecordService(params.id);
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "删除学习记录失败，请稍后再试。" }, { status: 500 });
   }
 }

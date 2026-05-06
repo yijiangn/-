@@ -205,3 +205,176 @@ async function upsertAttachments(
     preferRepresentation: true
   });
 }
+
+// Service role 版本 —— 不需要用户身份，使用 service_role key 直连
+
+export async function listMistakesService() {
+  const rows = await listStudyRecordRowsService("mistake");
+  const attachments = await listAttachmentsForRecordIdsService(rows.map((row) => row.id));
+
+  return rows.map((row) => mapMistakeFromDbRow(row, attachments.filter((item) => item.record_id === row.id)));
+}
+
+export async function listKnowledgeRecordsService() {
+  const rows = await listStudyRecordRowsService("knowledge");
+  const attachments = await listAttachmentsForRecordIdsService(rows.map((row) => row.id));
+
+  return rows.map((row) => mapKnowledgeFromDbRow(row, attachments.filter((item) => item.record_id === row.id)));
+}
+
+export async function insertMistakeService(record: MistakeRecord) {
+  const [row] = await supabaseRestRequest<DbStudyRecordRow[]>("study_records", {
+    method: "POST",
+    body: mapMistakeToDbRow(record),
+    preferRepresentation: true
+  });
+
+  if (record.attachments.length > 0) {
+    await upsertAttachmentsService(record.id, record.attachments);
+  }
+
+  const attachments = await listAttachmentsForRecordIdsService([record.id]);
+  return mapMistakeFromDbRow(row, attachments);
+}
+
+export async function updateMistakeService(record: MistakeRecord) {
+  const [row] = await supabaseRestRequest<DbStudyRecordRow[]>("study_records", {
+    method: "PATCH",
+    searchParams: {
+      id: `eq.${record.id}`
+    },
+    body: mapMistakeToDbRow(record),
+    preferRepresentation: true
+  });
+
+  await replaceAttachmentsService(record.id, record.attachments);
+  const attachments = await listAttachmentsForRecordIdsService([record.id]);
+  return mapMistakeFromDbRow(row, attachments);
+}
+
+export async function insertKnowledgeService(record: KnowledgeRecord) {
+  const [row] = await supabaseRestRequest<DbStudyRecordRow[]>("study_records", {
+    method: "POST",
+    body: mapKnowledgeToDbRow(record),
+    preferRepresentation: true
+  });
+
+  if (record.attachments.length > 0) {
+    await upsertAttachmentsService(record.id, record.attachments);
+  }
+
+  const attachments = await listAttachmentsForRecordIdsService([record.id]);
+  return mapKnowledgeFromDbRow(row, attachments);
+}
+
+export async function updateKnowledgeService(record: KnowledgeRecord) {
+  const [row] = await supabaseRestRequest<DbStudyRecordRow[]>("study_records", {
+    method: "PATCH",
+    searchParams: {
+      id: `eq.${record.id}`
+    },
+    body: mapKnowledgeToDbRow(record),
+    preferRepresentation: true
+  });
+
+  await replaceAttachmentsService(record.id, record.attachments);
+  const attachments = await listAttachmentsForRecordIdsService([record.id]);
+  return mapKnowledgeFromDbRow(row, attachments);
+}
+
+export async function removeStudyRecordService(recordId: string) {
+  await supabaseRestRequest("study_records", {
+    method: "DELETE",
+    searchParams: {
+      id: `eq.${recordId}`
+    }
+  });
+}
+
+export async function uploadRecordFileService(params: {
+  recordId: string;
+  label: string;
+  kind: DbAttachmentRow["kind"];
+  tone: DbAttachmentRow["tone"];
+  fileName: string;
+  contentType: string;
+  fileBody: ArrayBuffer;
+}) {
+  const safeName = params.fileName.replace(/[^\w.-]+/g, "-");
+  const filePath = `service/${params.recordId}/${Date.now()}-${safeName}`;
+  const upload = await uploadToSupabaseStorage(filePath, params.fileBody, params.contentType);
+
+  const attachmentRow = mapAttachmentToDbRow(
+    params.recordId,
+    {
+      id: `attachment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      label: params.label,
+      kind: params.kind,
+      tone: params.tone
+    },
+    upload
+  );
+
+  const [row] = await supabaseRestRequest<DbAttachmentRow[]>("attachments", {
+    method: "POST",
+    body: attachmentRow,
+    preferRepresentation: true
+  });
+
+  return row;
+}
+
+async function listStudyRecordRowsService(recordType: DbRecordType) {
+  return supabaseRestRequest<DbStudyRecordRow[]>("study_records", {
+    searchParams: {
+      select: "*",
+      record_type: `eq.${recordType}`,
+      order: "created_at.desc"
+    }
+  });
+}
+
+async function listAttachmentsForRecordIdsService(recordIds: string[]) {
+  if (recordIds.length === 0) {
+    return [] as DbAttachmentRow[];
+  }
+
+  return supabaseRestRequest<DbAttachmentRow[]>("attachments", {
+    searchParams: {
+      select: "*",
+      record_id: `in.(${recordIds.join(",")})`,
+      order: "created_at.asc"
+    }
+  });
+}
+
+async function replaceAttachmentsService(
+  recordId: string,
+  attachments: MistakeRecord["attachments"] | KnowledgeRecord["attachments"]
+) {
+  await supabaseRestRequest("attachments", {
+    method: "DELETE",
+    searchParams: {
+      record_id: `eq.${recordId}`
+    }
+  });
+
+  if (attachments.length === 0) {
+    return;
+  }
+
+  await upsertAttachmentsService(recordId, attachments);
+}
+
+async function upsertAttachmentsService(
+  recordId: string,
+  attachments: MistakeRecord["attachments"] | KnowledgeRecord["attachments"]
+) {
+  const rows = attachments.map((attachment) => mapAttachmentToDbRow(recordId, attachment));
+
+  await supabaseRestRequest<DbAttachmentRow[]>("attachments", {
+    method: "POST",
+    body: rows,
+    preferRepresentation: true
+  });
+}

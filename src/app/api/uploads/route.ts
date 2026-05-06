@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAuthenticatedSupabaseRequest, SupabaseAuthError } from "@/lib/supabase/auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/config";
-import { uploadRecordFile } from "@/lib/supabase/study-records-repository";
+import { uploadRecordFileService } from "@/lib/supabase/study-records-repository";
 
 const uploadKinds = ["screenshot", "photo", "file"] as const;
 const uploadTones = ["emerald", "sky", "amber", "rose", "slate"] as const;
@@ -12,7 +11,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const auth = await requireAuthenticatedSupabaseRequest(request);
     const formData = await request.formData();
     const file = formData.get("file");
     const recordId = formData.get("recordId");
@@ -35,8 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "附件配色无效。" }, { status: 400 });
     }
 
-    const uploaded = await uploadRecordFile({
-      userId: auth.userId,
+    const uploaded = await uploadRecordFileService({
       recordId: recordId.trim(),
       label: String(formData.get("label") || file.name).trim() || file.name,
       kind: (kind as "screenshot" | "photo" | "file") || "photo",
@@ -48,10 +45,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(uploaded, { status: 201 });
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "上传附件失败，请稍后再试。" }, { status: 500 });
   }
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildImportPreview } from "@/features/data-management/utils";
 import type { ImportTarget } from "@/features/data-management/types";
-import { requireAuthenticatedSupabaseRequest, SupabaseAuthError } from "@/lib/supabase/auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/config";
 
 export async function POST(request: Request) {
@@ -10,7 +9,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    await requireAuthenticatedSupabaseRequest(request);
     const formData = await request.formData();
     const target = String(formData.get("target") || "knowledge") as ImportTarget;
     const textInput = String(formData.get("textInput") || "");
@@ -21,10 +19,6 @@ export async function POST(request: Request) {
     const previewItems = await buildImportPreview(target, textInput, files);
     return NextResponse.json(previewItems);
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "生成导入预览失败，请稍后再试。" }, { status: 500 });
   }
 }

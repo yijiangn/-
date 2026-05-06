@@ -10,6 +10,7 @@ import { initialKnowledgeRecords } from "@/features/knowledge/mock-data";
 import type { KnowledgeRecord } from "@/features/knowledge/types";
 import { initialMistakes } from "@/features/mistakes/mock-data";
 import type { MistakeRecord } from "@/features/mistakes/types";
+import type { TaskStatus } from "@/features/tasks/types";
 import { buildHomeKnowledgeCards, buildHomeStatistics, buildSubjectProgress } from "@/features/home/utils/dashboard";
 import { localDataKeys, usePersistentCollection } from "@/lib/local-data";
 import { hasSupabaseClientEnv } from "@/lib/supabase/public-config";
@@ -17,7 +18,7 @@ import { notifyInfo } from "@/lib/toast";
 import { listStudyRecordsFromApi } from "@/services/study-records";
 
 export function HomeDashboardClient() {
-  const { tasks } = useTaskData();
+  const { tasks, updateTaskStatus } = useTaskData();
   const remoteEnabled = hasSupabaseClientEnv();
   const [mistakes, setMistakes, mistakeState] = usePersistentCollection<MistakeRecord>(localDataKeys.mistakes, {
     seedData: initialMistakes,
@@ -100,12 +101,26 @@ export function HomeDashboardClient() {
     const todayKey = new Date().toISOString().split("T")[0];
     if (dateKey > todayKey) return; // 不能标记未来的日期
 
-    setAttendance((prev) => 
-      prev.includes(dateKey) 
-        ? prev.filter((d) => d !== dateKey) 
+    setAttendance((prev) =>
+      prev.includes(dateKey)
+        ? prev.filter((d) => d !== dateKey)
         : [...prev, dateKey]
     );
   }, [setAttendance]);
+
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
+
+  const handleToggleTaskStatus = useCallback(
+    (taskId: string) => {
+      const task = tasksRef.current.find((t) => t.id === taskId);
+      if (!task) return;
+
+      const newStatus: TaskStatus = task.status === "completed" ? "not_started" : "completed";
+      updateTaskStatus(taskId, newStatus);
+    },
+    [updateTaskStatus]
+  );
 
   // 统计逻辑
   const attendanceStats = useMemo(() => {
@@ -168,10 +183,11 @@ export function HomeDashboardClient() {
         {/* 上排：今日任务(8) + 学习进度(4) - 通过 items-stretch 实现等高 */}
         <div className="grid items-stretch gap-4 lg:grid-cols-12">
           <div className="lg:col-span-8">
-            <TodayTasksCard 
-              tasks={tasks} 
+            <TodayTasksCard
+              tasks={tasks}
               attendance={attendance}
               onToggleAttendance={toggleAttendance}
+              onToggleTaskStatus={handleToggleTaskStatus}
             />
           </div>
           <div className="lg:col-span-4">

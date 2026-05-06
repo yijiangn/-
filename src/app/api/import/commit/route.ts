@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { ImportPreviewItem } from "@/features/data-management/types";
-import { requireAuthenticatedSupabaseRequest, SupabaseAuthError } from "@/lib/supabase/auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/config";
-import { insertKnowledge, insertMistake } from "@/lib/supabase/study-records-repository";
-import { insertTask } from "@/lib/supabase/tasks-repository";
+import { insertKnowledgeService, insertMistakeService } from "@/lib/supabase/study-records-repository";
+import { insertTaskService } from "@/lib/supabase/tasks-repository";
 import {
   validateKnowledgeRecord,
   validateMistakeRecord,
@@ -16,7 +15,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const auth = await requireAuthenticatedSupabaseRequest(request);
     const payload = (await request.json()) as { previewItems?: ImportPreviewItem[] };
     const previewItems = Array.isArray(payload.previewItems) ? payload.previewItems : [];
     let importedCount = 0;
@@ -31,7 +29,7 @@ export async function POST(request: Request) {
         if (!validation.success) {
           continue;
         }
-        await insertTask(auth, validation.data);
+        await insertTaskService(validation.data);
         importedCount += 1;
         continue;
       }
@@ -41,7 +39,7 @@ export async function POST(request: Request) {
         if (!validation.success) {
           continue;
         }
-        await insertMistake(auth, validation.data);
+        await insertMistakeService(validation.data);
         importedCount += 1;
         continue;
       }
@@ -50,16 +48,12 @@ export async function POST(request: Request) {
       if (!validation.success) {
         continue;
       }
-      await insertKnowledge(auth, validation.data);
+      await insertKnowledgeService(validation.data);
       importedCount += 1;
     }
 
     return NextResponse.json({ importedCount });
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "导入提交失败，请稍后再试。" }, { status: 500 });
   }
 }

@@ -25,13 +25,15 @@ interface TodayTasksCardProps {
   referenceDate?: Date;
   attendance?: string[];
   onToggleAttendance?: (dateKey: string) => void;
+  onToggleTaskStatus?: (taskId: string) => void;
 }
 
-export function TodayTasksCard({ 
-  tasks, 
+export function TodayTasksCard({
+  tasks,
   referenceDate: initialDate,
   attendance = [],
-  onToggleAttendance
+  onToggleAttendance,
+  onToggleTaskStatus
 }: TodayTasksCardProps) {
   const [mounted, setMounted] = useState(false);
   const [referenceDate, setReferenceDate] = useState<Date | null>(initialDate || null);
@@ -171,16 +173,24 @@ export function TodayTasksCard({
                     key={task.id}
                     className="group relative flex items-center gap-4 panel p-4 hover:bg-white/40 dark:hover:bg-stone-800/40"
                   >
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => onToggleTaskStatus?.(task.id)}
+                      title={isCompleted ? "点击撤销完成" : "点击标记完成"}
                       className={cn(
                         "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
                         isCompleted
-                          ? "border-sage-500 bg-sage-500 text-white shadow-sm"
-                          : "border-stone-200 bg-transparent group-hover:border-sage-400 dark:border-stone-700"
+                          ? "border-sage-500 bg-sage-500 text-white shadow-sm hover:border-red-400 hover:bg-red-400"
+                          : "border-stone-200 bg-transparent hover:border-sage-400 hover:bg-sage-50 group/btn dark:border-stone-700 dark:hover:border-sage-500 dark:hover:bg-sage-900/30"
                       )}
                     >
-                      {isCompleted && <CheckIcon className="h-3.5 w-3.5" />}
-                    </div>
+                      <CheckIcon
+                        className={cn(
+                          "h-3.5 w-3.5 transition-opacity",
+                          isCompleted ? "opacity-100" : "opacity-0 group-hover/btn:opacity-100 text-sage-400"
+                        )}
+                      />
+                    </button>
 
                     <div className="flex-1 overflow-hidden">
                       <div className="flex items-center justify-between gap-4">

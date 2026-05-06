@@ -1,6 +1,6 @@
 import "server-only";
 import { mapDbRowToTask, mapTaskToDbRow } from "@/lib/supabase/mappers";
-import { supabaseUserRestRequest } from "@/lib/supabase/rest";
+import { supabaseRestRequest, supabaseUserRestRequest } from "@/lib/supabase/rest";
 import type { StudyTask } from "@/features/tasks/types";
 import type { DbTaskRow } from "@/types/database";
 
@@ -60,6 +60,50 @@ export async function removeTask(context: TaskRepositoryContext, taskId: string)
     searchParams: {
       id: `eq.${taskId}`,
       user_id: `eq.${context.userId}`
+    }
+  });
+}
+
+// Service role 版本 —— 不需要用户身份，使用 service_role key 直连
+
+export async function listTasksService() {
+  const rows = await supabaseRestRequest<DbTaskRow[]>("tasks", {
+    searchParams: {
+      select: "*",
+      order: "created_at.desc"
+    }
+  });
+  return rows.map(mapDbRowToTask);
+}
+
+export async function insertTaskService(task: StudyTask) {
+  const [row] = await supabaseRestRequest<DbTaskRow[]>("tasks", {
+    method: "POST",
+    body: mapTaskToDbRow(task),
+    preferRepresentation: true
+  });
+
+  return mapDbRowToTask(row);
+}
+
+export async function updateTaskService(task: StudyTask) {
+  const [row] = await supabaseRestRequest<DbTaskRow[]>("tasks", {
+    method: "PATCH",
+    searchParams: {
+      id: `eq.${task.id}`
+    },
+    body: mapTaskToDbRow(task),
+    preferRepresentation: true
+  });
+
+  return mapDbRowToTask(row);
+}
+
+export async function removeTaskService(taskId: string) {
+  await supabaseRestRequest("tasks", {
+    method: "DELETE",
+    searchParams: {
+      id: `eq.${taskId}`
     }
   });
 }

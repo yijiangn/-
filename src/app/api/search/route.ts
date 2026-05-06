@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { GlobalSearchFilters } from "@/features/search/types";
 import { defaultGlobalSearchFilters } from "@/features/search/utils";
-import { requireAuthenticatedSupabaseRequest, SupabaseAuthError } from "@/lib/supabase/auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/config";
-import { searchSupabaseData } from "@/lib/supabase/search-repository";
+import { searchSupabaseDataService } from "@/lib/supabase/search-repository";
 
 export async function GET(request: Request) {
   if (!hasSupabaseServerEnv()) {
@@ -11,7 +10,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    const auth = await requireAuthenticatedSupabaseRequest(request);
     const url = new URL(request.url);
     const filters: GlobalSearchFilters = {
       ...defaultGlobalSearchFilters,
@@ -25,12 +23,8 @@ export async function GET(request: Request) {
       importance: parseImportance(url.searchParams.get("importance"))
     };
 
-    return NextResponse.json(await searchSupabaseData(auth, filters));
+    return NextResponse.json(await searchSupabaseDataService(filters));
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "搜索失败，请稍后再试。" }, { status: 500 });
   }
 }

@@ -5,10 +5,9 @@ import {
   buildExportRecords,
   buildMarkdownExport
 } from "@/features/data-management/utils";
-import { requireAuthenticatedSupabaseRequest, SupabaseAuthError } from "@/lib/supabase/auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/config";
-import { listKnowledgeRecords, listMistakes } from "@/lib/supabase/study-records-repository";
-import { listTasks } from "@/lib/supabase/tasks-repository";
+import { listKnowledgeRecordsService, listMistakesService } from "@/lib/supabase/study-records-repository";
+import { listTasksService } from "@/lib/supabase/tasks-repository";
 
 export async function POST(request: Request) {
   if (!hasSupabaseServerEnv()) {
@@ -16,12 +15,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const auth = await requireAuthenticatedSupabaseRequest(request);
     const config = (await request.json()) as ExportConfig;
     const [tasks, mistakes, knowledge] = await Promise.all([
-      listTasks(auth),
-      listMistakes(auth),
-      listKnowledgeRecords(auth)
+      listTasksService(),
+      listMistakesService(),
+      listKnowledgeRecordsService()
     ]);
     const records = buildExportRecords({ tasks, mistakes, knowledge }, config.filters);
     const content = config.format === "markdown"
@@ -40,10 +38,6 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    if (error instanceof SupabaseAuthError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
-    }
-
     return NextResponse.json({ message: "导出失败，请稍后再试。" }, { status: 500 });
   }
 }

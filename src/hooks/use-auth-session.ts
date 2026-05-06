@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { clearClientAccessToken, getAuthEventName, getClientAccessToken, setClientAccessToken } from "@/lib/supabase/client-auth";
-import { hasSupabaseClientEnv } from "@/lib/supabase/public-config";
+import { hasSupabaseClientEnv, isServiceMode } from "@/lib/supabase/public-config";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { ApiRequestError } from "@/services/request-json";
 import { getCurrentUserFromApi, signInWithPasswordFromApi, type AuthSessionProfile } from "@/services/auth";
@@ -11,10 +11,10 @@ type AuthStatus = "disabled" | "disconnected" | "loading" | "connected";
 
 export function useAuthSession() {
   const [profile, setProfile] = useState<AuthSessionProfile | null>(null);
-  const [status, setStatus] = useState<AuthStatus>(() => (hasSupabaseClientEnv() ? "loading" : "disabled"));
+  const [status, setStatus] = useState<AuthStatus>(() => (hasSupabaseClientEnv() && !isServiceMode() ? "loading" : "disabled"));
 
   const refreshProfile = useCallback(async () => {
-    if (!hasSupabaseClientEnv()) {
+    if (!hasSupabaseClientEnv() || isServiceMode()) {
       setProfile(null);
       setStatus("disabled");
       return null;
@@ -63,8 +63,8 @@ export function useAuthSession() {
 
   const connectWithAccessToken = useCallback(
     async (accessToken: string) => {
-      if (!hasSupabaseClientEnv()) {
-        notifyError("云端未配置", "当前环境没有配置 Supabase，无法连接账号。", "auth-disabled");
+      if (!hasSupabaseClientEnv() || isServiceMode()) {
+        notifyError("云端未配置", "当前环境没有配置 Supabase 登录，无法连接账号。", "auth-disabled");
         return null;
       }
 
@@ -87,8 +87,8 @@ export function useAuthSession() {
   );
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
-    if (!hasSupabaseClientEnv()) {
-      notifyError("云端未配置", "当前环境没有配置 Supabase，无法登录。", "auth-disabled");
+    if (!hasSupabaseClientEnv() || isServiceMode()) {
+      notifyError("云端未配置", "当前环境没有配置 Supabase 登录，无法登录。", "auth-disabled");
       return null;
     }
 
@@ -121,7 +121,7 @@ export function useAuthSession() {
   const disconnect = useCallback(() => {
     clearClientAccessToken();
     setProfile(null);
-    setStatus(hasSupabaseClientEnv() ? "disconnected" : "disabled");
+    setStatus(hasSupabaseClientEnv() && !isServiceMode() ? "disconnected" : "disabled");
     notifySuccess("已断开云端账号", "本地数据仍可继续使用。", "auth-disconnected");
   }, []);
 
