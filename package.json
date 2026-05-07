@@ -9,10 +9,15 @@
     "db:init": "node scripts/db-init.js"
   },
   "dependencies": {
+    "katex": "^0.16.45",
     "next": "^14.2.25",
     "next-themes": "^0.4.6",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",

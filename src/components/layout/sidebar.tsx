@@ -10,6 +10,7 @@ import {
   LayersIcon,
   MoonIcon,
   NoteIcon,
+  SparklesIcon,
   SunIcon,
   TargetIcon,
   TrendIcon,
@@ -25,7 +26,8 @@ const navItems = [
   { href: "/knowledge", icon: LayersIcon, label: "知识" },
   { href: "/stats", icon: TrendIcon, label: "统计" },
   { href: "/data", icon: FileTextIcon, label: "数据" },
-  { href: "/settings", icon: SettingsIcon, label: "设置" }
+  { href: "/settings", icon: SettingsIcon, label: "设置" },
+  { href: "/ai", icon: SparklesIcon, label: "AI 助手" }
 ];
 
 export function Sidebar() {
