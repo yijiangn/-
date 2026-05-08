@@ -1,14 +1,20 @@
 import { deepseekProvider } from "./deepseek";
+import { createOpenAICompatibleProvider } from "./openai-compatible";
 import type { AIProvider } from "@/lib/ai/types";
 
-const providers: Record<string, AIProvider> = {
-  deepseek: deepseekProvider,
-};
-
 export function getProvider(id: string): AIProvider {
-  const provider = providers[id];
-  if (!provider) {
-    throw new Error(`Unknown AI provider: ${id}`);
+  // DeepSeek 直连
+  if (id === "deepseek") {
+    return deepseekProvider;
   }
-  return provider;
+
+  // 中转站 relay
+  if (id === "relay") {
+    return createOpenAICompatibleProvider("relay", {
+      baseUrl: process.env.RELAY_BASE_URL || "https://api.opusclaw.me/v1",
+      apiKey: process.env.RELAY_API_KEY || "",
+    });
+  }
+
+  throw new Error(`Unknown AI provider: ${id}`);
 }

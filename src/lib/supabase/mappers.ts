@@ -21,6 +21,7 @@ export function mapTaskToDbRow(task: StudyTask): DbTaskRow {
     estimate_label: task.estimateLabel ?? null,
     deadline_label: task.deadlineLabel ?? null,
     archived_at: task.archivedAt ?? null,
+    completed_at: task.completedAt ?? null,
     created_at: task.createdAt,
     updated_at: now
   };
@@ -41,6 +42,7 @@ export function mapDbRowToTask(row: DbTaskRow): StudyTask {
     estimateLabel: row.estimate_label ?? undefined,
     deadlineLabel: row.deadline_label ?? undefined,
     archivedAt: row.archived_at,
+    completedAt: row.completed_at,
     createdAt: row.created_at
   };
 }

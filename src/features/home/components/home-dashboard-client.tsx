@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KnowledgeSpotlightCard } from "@/features/home/components/knowledge-spotlight-card";
 import { KnowledgeNotesCard } from "@/features/home/components/knowledge-notes-card";
 import { StudyProgressCard } from "@/features/home/components/study-progress-card";
 import { TodayTasksCard, getTodayTaskProgressPercent } from "@/features/home/components/today-tasks-card";
 import { useTaskData } from "@/features/tasks/hooks/use-task-data";
+import { TaskFormModal } from "@/features/tasks/components/task-form-modal";
 import { initialKnowledgeRecords } from "@/features/knowledge/mock-data";
 import type { KnowledgeRecord } from "@/features/knowledge/types";
 import { initialMistakes } from "@/features/mistakes/mock-data";
 import type { MistakeRecord } from "@/features/mistakes/types";
-import type { TaskStatus } from "@/features/tasks/types";
+import type { StudyTask, TaskStatus } from "@/features/tasks/types";
 import { buildHomeKnowledgeCards, buildHomeStatistics, buildSubjectProgress } from "@/features/home/utils/dashboard";
 import { localDataKeys, usePersistentCollection } from "@/lib/local-data";
 import { hasSupabaseClientEnv } from "@/lib/supabase/public-config";
@@ -18,7 +19,8 @@ import { notifyInfo } from "@/lib/toast";
 import { listStudyRecordsFromApi } from "@/services/study-records";
 
 export function HomeDashboardClient() {
-  const { tasks, updateTaskStatus } = useTaskData();
+  const { tasks, updateTaskFields, updateTaskStatus } = useTaskData();
+  const [editingTask, setEditingTask] = useState<StudyTask | null>(null);
   const remoteEnabled = hasSupabaseClientEnv();
   const [mistakes, setMistakes, mistakeState] = usePersistentCollection<MistakeRecord>(localDataKeys.mistakes, {
     seedData: initialMistakes,
@@ -122,6 +124,20 @@ export function HomeDashboardClient() {
     [updateTaskStatus]
   );
 
+  const handleEditTask = useCallback((task: StudyTask) => {
+    setEditingTask(task);
+  }, []);
+
+  const handleSaveTask = useCallback(
+    async (values: any) => {
+      if (editingTask) {
+        await updateTaskFields(editingTask.id, values);
+        setEditingTask(null);
+      }
+    },
+    [editingTask, updateTaskFields]
+  );
+
   // 统计逻辑
   const attendanceStats = useMemo(() => {
     const sorted = [...attendance].sort();
@@ -178,33 +194,41 @@ export function HomeDashboardClient() {
   const cardsBySubject = useMemo(() => buildHomeKnowledgeCards(knowledgeRecords), [knowledgeRecords]);
 
   return (
-    <div className="px-3 py-3 lg:px-4 lg:py-4">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-4">
-        {/* 上排：今日任务(8) + 学习进度(4) - 通过 items-stretch 实现等高 */}
-        <div className="grid items-stretch gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-8">
-            <TodayTasksCard
-              tasks={tasks}
-              attendance={attendance}
-              onToggleAttendance={toggleAttendance}
-              onToggleTaskStatus={handleToggleTaskStatus}
-            />
+    <>
+      <div className="px-3 py-3 lg:px-4 lg:py-4">
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-4">
+          <div className="grid items-stretch gap-4 lg:grid-cols-12">
+            <div className="lg:col-span-8">
+              <TodayTasksCard
+                tasks={tasks}
+                attendance={attendance}
+                onToggleAttendance={toggleAttendance}
+                onToggleTaskStatus={handleToggleTaskStatus}
+                onEditTask={handleEditTask}
+              />
+            </div>
+            <div className="lg:col-span-4">
+              <StudyProgressCard
+                subjects={subjectProgress}
+                streakDays={attendanceStats.streak}
+                monthDays={attendanceStats.monthDays}
+                weekDays={attendanceStats.weekDays}
+              />
+            </div>
           </div>
-          <div className="lg:col-span-4">
-            <StudyProgressCard 
-              subjects={subjectProgress} 
-              streakDays={attendanceStats.streak}
-              monthDays={attendanceStats.monthDays}
-              weekDays={attendanceStats.weekDays}
-            />
-          </div>
-        </div>
 
-        {/* 下排：知识点闪卡 - 占据全宽 */}
-        <div className="w-full">
-          <KnowledgeSpotlightCard cardsBySubject={cardsBySubject} />
+          <div className="w-full">
+            <KnowledgeSpotlightCard cardsBySubject={cardsBySubject} />
+          </div>
         </div>
       </div>
-    </div>
+
+      <TaskFormModal
+        open={!!editingTask}
+        onClose={() => setEditingTask(null)}
+        onSubmit={handleSaveTask}
+        editingTask={editingTask}
+      />
+    </>
   );
 }

@@ -5,7 +5,7 @@ import { ArchiveIcon, ChevronDownIcon, ClockIcon, PlusIcon, TrashIcon } from "@/
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { taskStatusOptions } from "@/features/tasks/mock-data";
 import type { StudyTask, TaskStatus } from "@/features/tasks/types";
-import { getTaskStatusClasses, getTaskStepLabel } from "@/features/tasks/utils";
+import { getTaskStatusClasses, getTaskStepLabel, isVisibleInToday } from "@/features/tasks/utils";
 import { subjectMetaMap } from "@/lib/constants/subjects";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +26,7 @@ export function TodayTasksAccordion({
   onDelete,
   onCreate
 }: TodayTasksAccordionProps) {
-  const todayTasks = tasks.filter((task) => task.bucket === "today" && !task.archivedAt);
+  const todayTasks = tasks.filter(isVisibleInToday);
   const completedCount = todayTasks.filter((task) => task.status === "completed").length;
   const defaultOpen =
     todayTasks.find((task) => task.status === "in_progress")?.id ??
@@ -91,32 +91,55 @@ export function TodayTasksAccordion({
 
           return (
             <div key={task.id} className={cn("transition-colors", isCompleted && "opacity-70")}>
-              <button
-                type="button"
-                onClick={() => setOpenId((current) => (current === task.id ? null : task.id))}
-                className="flex w-full items-center gap-3 px-5 py-3.5 text-left transition hover:bg-white/20 dark:hover:bg-stone-800/30"
-              >
-                <span
-                  className={cn(
-                    "h-2.5 w-2.5 shrink-0 rounded-full",
-                    task.status === "completed"
-                      ? "bg-sage-500"
-                      : task.status === "in_progress"
-                        ? "bg-amber-400 shadow-[0_0_6px_2px_rgba(251,191,36,0.4)]"
-                        : task.status === "delayed"
-                          ? "bg-red-400"
-                          : "bg-stone-300"
-                  )}
-                />
-                <span className={cn("shrink-0 rounded-lg border px-2 py-0.5 text-[10px] font-black", subject.accentSurfaceClass, subject.accentTextClass)}>
-                  {subject.label}
-                </span>
-                <span className={cn("flex-1 truncate text-sm font-black text-stone-950 dark:text-stone-100", isCompleted && "line-through")}>
-                  {task.title}
-                </span>
-                <span className="shrink-0 text-xs font-black text-stone-600 dark:text-stone-400">{task.progress}%</span>
-                <ChevronDownIcon className={cn("h-4 w-4 shrink-0 text-stone-500 transition-transform duration-200", isOpen && "rotate-180")} />
-              </button>
+              <div className="flex w-full items-center px-2 py-2 transition hover:bg-white/20 dark:hover:bg-stone-800/30">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newStatus = task.status === "completed" ? "not_started" : "completed";
+                    onStatusChange(task.id, newStatus);
+                    if (newStatus === "completed") {
+                      onProgressChange(task.id, 100);
+                    }
+                  }}
+                  className="flex shrink-0 items-center justify-center p-3 transition-transform hover:scale-110 active:scale-95"
+                  aria-label={isCompleted ? "标为未完成" : "标为完成"}
+                >
+                  <div
+                    className={cn(
+                      "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors",
+                      isCompleted
+                        ? "border-sage-500 bg-sage-500 text-white"
+                        : task.status === "in_progress"
+                          ? "border-amber-400 bg-transparent"
+                          : task.status === "delayed"
+                            ? "border-red-400 bg-transparent"
+                            : "border-stone-300 bg-transparent dark:border-stone-600"
+                    )}
+                  >
+                    {isCompleted && (
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setOpenId((current) => (current === task.id ? null : task.id))}
+                  className="flex flex-1 items-center gap-3 py-2 pr-3 text-left"
+                >
+                  <span className={cn("shrink-0 rounded-lg border px-2 py-0.5 text-[10px] font-black", subject.accentSurfaceClass, subject.accentTextClass)}>
+                    {subject.label}
+                  </span>
+                  <span className={cn("flex-1 truncate text-sm font-black text-stone-950 transition-all dark:text-stone-100", isCompleted && "text-stone-400 line-through dark:text-stone-500")}>
+                    {task.title}
+                  </span>
+                  <span className="shrink-0 text-xs font-black text-stone-600 dark:text-stone-400">{task.progress}%</span>
+                  <ChevronDownIcon className={cn("h-4 w-4 shrink-0 text-stone-500 transition-transform duration-200", isOpen && "rotate-180")} />
+                </button>
+              </div>
 
               {isOpen ? (
                 <div className="border-t border-white/20 bg-white/10 px-5 py-4 dark:border-stone-700/30 dark:bg-stone-900/20">

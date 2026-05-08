@@ -5,6 +5,7 @@ import { ToastProvider } from "@/components/feedback/toast-provider";
 import { BackgroundManager } from "@/components/layout/background-manager";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
+import { AuthCheck } from "@/components/layout/auth-check";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 import "katex/dist/katex.min.css";
@@ -29,6 +30,7 @@ export default function RootLayout({
         className={`${inter.variable} ${playfair.variable} relative min-h-screen font-sans text-stone-800 antialiased dark:text-stone-200`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+          <AuthCheck />
           <BackgroundManager />
           <Sidebar />
 

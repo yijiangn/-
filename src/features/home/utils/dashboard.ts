@@ -3,10 +3,11 @@ import type { KnowledgeRecord } from "@/features/knowledge/types";
 import type { MistakeRecord } from "@/features/mistakes/types";
 import { buildStatisticsSnapshot } from "@/features/stats/utils";
 import type { StudyTask } from "@/features/tasks/types";
+import { isVisibleInToday } from "@/features/tasks/utils";
 import { subjectMetas } from "@/lib/constants/subjects";
 
 export function calculateHomeTaskProgressPercent(tasks: StudyTask[]) {
-  const todayTasks = tasks.filter((task) => task.bucket === "today" && !task.archivedAt);
+  const todayTasks = tasks.filter(isVisibleInToday);
 
   if (todayTasks.length === 0) {
     return 0;

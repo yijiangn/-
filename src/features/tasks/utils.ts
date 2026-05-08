@@ -33,18 +33,32 @@ export function normalizeTask(task: StudyTask): StudyTask {
   const currentStep = resolveCurrentStep(steps, progress, task.status, task.currentStep);
 
   if (task.status === "completed") {
-    return { ...task, steps, currentStep, progress: 100 };
+    return {
+      ...task,
+      steps,
+      currentStep,
+      progress: 100,
+      completedAt: task.completedAt || new Date().toISOString(),
+    };
   }
 
   if (progress === 100) {
-    return { ...task, steps, currentStep, progress, status: "completed" };
+    return {
+      ...task,
+      steps,
+      currentStep,
+      progress,
+      status: "completed",
+      completedAt: task.completedAt || new Date().toISOString(),
+    };
   }
 
   if (progress > 0 && task.status === "not_started") {
-    return { ...task, steps, currentStep, progress, status: "in_progress" };
+    return { ...task, steps, currentStep, progress, status: "in_progress", completedAt: null };
   }
 
-  return { ...task, steps, currentStep, progress };
+  // 走到这里说明状态不是 completed → 清除 completedAt
+  return { ...task, steps, currentStep, progress, completedAt: null };
 }
 
 function resolveCurrentStep(steps: string[], progress: number, status: TaskStatus, fallback: number) {
@@ -67,6 +81,23 @@ function resolveCurrentStep(steps: string[], progress: number, status: TaskStatu
   }
 
   return Math.min(steps.length - 1, Math.max(0, derivedIndex));
+}
+
+/** 判断任务是否应该在"今日任务"中显示 */
+export function todayISO() {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function isVisibleInToday(task: StudyTask) {
+  // 不是今日桶的任务不显示
+  if (task.bucket !== "today") return false;
+  // 已归档的不显示
+  if (task.archivedAt) return false;
+  // 已完成但完成日期不是今天 → 不显示（昨天及以前清掉）
+  if (task.status === "completed" && task.completedAt) {
+    return task.completedAt.split("T")[0] === todayISO();
+  }
+  return true;
 }
 
 export function getTaskStepLabel(task: StudyTask) {

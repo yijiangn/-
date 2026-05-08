@@ -57,7 +57,41 @@ export function TaskItemCard({
           ) : null}
         </div>
 
-        <h3 className="mt-3 text-base font-black text-stone-950 sm:text-lg dark:text-stone-100">{task.title}</h3>
+        <div className="flex items-start gap-3 mt-3">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const newStatus = task.status === "completed" ? "not_started" : "completed";
+              onStatusChange(task.id, newStatus);
+            }}
+            className="mt-1 flex shrink-0 items-center justify-center p-1 transition-transform hover:scale-110 active:scale-95"
+            aria-label={task.status === "completed" ? "标为未完成" : "标为完成"}
+          >
+            <div
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors",
+                task.status === "completed"
+                  ? "border-sage-500 bg-sage-500 text-white"
+                  : task.status === "in_progress"
+                    ? "border-amber-400 bg-transparent"
+                    : task.status === "delayed"
+                      ? "border-red-400 bg-transparent"
+                      : "border-stone-300 bg-transparent dark:border-stone-600"
+              )}
+            >
+              {task.status === "completed" && (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </button>
+          
+          <h3 className={cn("text-base font-black sm:text-lg transition-colors", task.status === "completed" ? "text-stone-400 line-through dark:text-stone-500" : "text-stone-950 dark:text-stone-100")}>
+            {task.title}
+          </h3>
+        </div>
         <p className="mt-2 text-sm leading-6 font-bold text-stone-700 dark:text-stone-300">{task.focus}</p>
       </div>
 

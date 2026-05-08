@@ -8,7 +8,7 @@ export interface TodayTask {
   title: string;
   subjectKey: SubjectKey;
   subjectLabel: string;
-  status: "completed" | "in_progress" | "todo";
+  status: "completed" | "in_progress" | "not_started";
   progress: number;
   focus: string;
   durationLabel: string;
@@ -60,7 +60,7 @@ export const todayTasks: TodayTask[] = [
     title: "408：数据结构树与图专项",
     subjectKey: "cs408",
     subjectLabel: "408",
-    status: "todo",
+    status: "not_started",
     progress: 0,
     focus: "优先回顾高频考点和典型选择题",
     durationLabel: "预计 90 分钟"
@@ -70,7 +70,7 @@ export const todayTasks: TodayTask[] = [
     title: "整理今日错题到知识点卡片",
     subjectKey: "math",
     subjectLabel: "数学",
-    status: "todo",
+    status: "not_started",
     progress: 0,
     focus: "补充注意事项和常错原因",
     durationLabel: "预计 25 分钟"

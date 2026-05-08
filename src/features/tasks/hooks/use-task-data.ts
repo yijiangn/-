@@ -154,6 +154,10 @@ export function useTaskData() {
       updateTask(taskId, (task) => ({
         ...task,
         status,
+        completedAt:
+          status === "completed"
+            ? new Date().toISOString()
+            : null,
         progress:
           status === "completed"
             ? 100
@@ -188,6 +192,23 @@ export function useTaskData() {
       updateTask(taskId, (task) => ({
         ...task,
         archivedAt: task.archivedAt ? null : new Date().toISOString()
+      })),
+    [updateTask]
+  );
+
+  const updateTaskFields = useCallback(
+    async (taskId: string, values: TaskFormValues) =>
+      updateTask(taskId, (task) => ({
+        ...task,
+        title: values.title,
+        subjectKey: values.subjectKey,
+        bucket: values.bucket,
+        status: values.status,
+        progress: values.progress,
+        focus: values.focus,
+        note: values.note || undefined,
+        estimateLabel: values.estimateLabel || undefined,
+        deadlineLabel: values.deadlineLabel || undefined,
       })),
     [updateTask]
   );
@@ -280,6 +301,7 @@ export function useTaskData() {
     defaultFilters: defaultTaskFilters,
     createTask,
     deleteTask,
+    updateTaskFields,
     updateTaskProgress,
     updateTaskStatus,
     toggleTaskArchive

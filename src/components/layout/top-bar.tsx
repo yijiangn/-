@@ -15,6 +15,7 @@ import { FocusTimerWidget } from "@/components/layout/focus-timer-widget";
 import { QuickSearchDialog } from "@/components/layout/quick-search-dialog";
 import { TopbarNotificationMenu } from "@/components/layout/topbar-notification-menu";
 import { TopbarUserMenu } from "@/components/layout/topbar-user-menu";
+import { AdminMenu } from "@/components/layout/admin-menu";
 import { examInfo } from "@/features/home/mock-data";
 import { useWeather } from "@/features/home/hooks/use-weather";
 import { calculateDaysUntil } from "@/features/home/utils/date";
@@ -221,6 +222,7 @@ export function TopBar() {
               formattedTime={focusTimer.formattedTime}
             />
             <TopbarUserMenu {...authSession} />
+            <AdminMenu />
           </div>
         </div>
       </header>

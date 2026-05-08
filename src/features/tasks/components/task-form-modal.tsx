@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlusIcon, XIcon } from "@/components/ui/icons";
+import { EditIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { taskStatusOptions } from "@/features/tasks/mock-data";
-import type { TaskFormValues } from "@/features/tasks/types";
+import type { StudyTask, TaskFormValues } from "@/features/tasks/types";
 import { subjectMetas } from "@/lib/constants/subjects";
 import { notifyError } from "@/lib/toast";
 import { validateTaskFormValues } from "@/lib/validation";
@@ -12,6 +12,7 @@ interface TaskFormModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (values: TaskFormValues) => void;
+  editingTask?: StudyTask | null;
 }
 
 const initialFormState: TaskFormValues = {
@@ -26,16 +27,30 @@ const initialFormState: TaskFormValues = {
   deadlineLabel: ""
 };
 
-export function TaskFormModal({ open, onClose, onSubmit }: TaskFormModalProps) {
+export function TaskFormModal({ open, onClose, onSubmit, editingTask }: TaskFormModalProps) {
+  const isEditing = !!editingTask;
   const [formValues, setFormValues] = useState<TaskFormValues>(initialFormState);
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (editingTask) {
+      setFormValues({
+        title: editingTask.title,
+        subjectKey: editingTask.subjectKey,
+        bucket: editingTask.bucket,
+        status: editingTask.status,
+        progress: editingTask.progress,
+        focus: editingTask.focus,
+        note: editingTask.note || "",
+        estimateLabel: editingTask.estimateLabel || "",
+        deadlineLabel: editingTask.deadlineLabel || "",
+      });
+    } else {
       setFormValues(initialFormState);
-      setFormError(null);
     }
-  }, [open]);
+    setFormError(null);
+  }, [open, editingTask]);
 
   if (!open) {
     return null;
@@ -48,11 +63,15 @@ export function TaskFormModal({ open, onClose, onSubmit }: TaskFormModalProps) {
           <div className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-5 sm:px-6">
             <div>
               <span className="soft-pill">
-                <PlusIcon className="h-4 w-4" />
-                新增任务
+                {isEditing ? <EditIcon className="h-4 w-4" /> : <PlusIcon className="h-4 w-4" />}
+                {isEditing ? "编辑任务" : "新增任务"}
               </span>
-              <h2 className="mt-4 text-2xl font-semibold text-slate-900">先把能马上执行的任务记下来</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">首版先保留最必要字段：任务名、科目、任务类型、状态、进度和简单说明。</p>
+              <h2 className="mt-4 text-2xl font-semibold text-slate-900">
+                {isEditing ? "修改任务详情" : "先把能马上执行的任务记下来"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {isEditing ? "修改任务标题、科目、进度等信息。" : "首版先保留最必要字段：任务名、科目、任务类型、状态、进度和简单说明。"}
+              </p>
             </div>
             <button
               type="button"

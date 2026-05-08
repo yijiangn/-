@@ -18,6 +18,7 @@ import {
   formatMonthLabel,
   weekHeaders
 } from "@/features/home/utils/date";
+import { isVisibleInToday } from "@/features/tasks/utils";
 import { cn } from "@/lib/utils";
 
 interface TodayTasksCardProps {
@@ -26,6 +27,7 @@ interface TodayTasksCardProps {
   attendance?: string[];
   onToggleAttendance?: (dateKey: string) => void;
   onToggleTaskStatus?: (taskId: string) => void;
+  onEditTask?: (task: StudyTask) => void;
 }
 
 export function TodayTasksCard({
@@ -33,7 +35,8 @@ export function TodayTasksCard({
   referenceDate: initialDate,
   attendance = [],
   onToggleAttendance,
-  onToggleTaskStatus
+  onToggleTaskStatus,
+  onEditTask
 }: TodayTasksCardProps) {
   const [mounted, setMounted] = useState(false);
   const [referenceDate, setReferenceDate] = useState<Date | null>(initialDate || null);
@@ -55,7 +58,7 @@ export function TodayTasksCard({
 
   const calendarCells = buildCalendar(referenceDate);
   const todayTasks = tasks
-    .filter((task) => task.bucket === "today" && !task.archivedAt)
+    .filter(isVisibleInToday)
     .slice(0, 5);
 
   const getProgressBarColor = (progress: number, isCompleted: boolean) => {
@@ -203,7 +206,10 @@ export function TodayTasksCard({
                           {task.title}
                         </h4>
                         <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                          <button className="rounded-lg p-1 text-stone-400 hover:bg-sage-100 hover:text-sage-600">
+                          <button
+                            className="rounded-lg p-1 text-stone-400 hover:bg-sage-100 hover:text-sage-600"
+                            onClick={() => onEditTask?.(task)}
+                          >
                             <EditIcon className="h-4 w-4" />
                           </button>
                         </div>
@@ -233,7 +239,7 @@ export function TodayTasksCard({
 }
 
 export function getTodayTaskProgressPercent(tasks: StudyTask[]) {
-  const todayTasks = tasks.filter((t) => t.bucket === "today" && !t.archivedAt);
+  const todayTasks = tasks.filter(isVisibleInToday);
   if (todayTasks.length === 0) return 0;
   const completedCount = todayTasks.filter((t) => t.status === "completed" || t.progress === 100).length;
   return Math.round((completedCount / todayTasks.length) * 100);

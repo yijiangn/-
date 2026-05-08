@@ -15,6 +15,15 @@ html {
   animation: fadeIn 0.4s ease-out forwards;
 }
 
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease-out forwards;
+}
+
 @layer base {
   * {
     @apply border-stone-200/50 dark:border-stone-700/50;

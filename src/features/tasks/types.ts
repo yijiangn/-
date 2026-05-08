@@ -20,6 +20,7 @@ export interface StudyTask {
   estimateLabel?: string;
   deadlineLabel?: string;
   archivedAt?: string | null;
+  completedAt?: string | null;
   createdAt: string;
 }
 
